@@ -1,6 +1,6 @@
 How can the cosine similarity between two vectors A and B be represented?
 ?
-dot(A, B) / norm(A) * norm(B)
+dot(A, B) / (norm(A) * norm(B))
 
 French for: "Hello"
 ?
