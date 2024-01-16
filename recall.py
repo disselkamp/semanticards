@@ -79,7 +79,7 @@ def main(decks, shuffle):
         correct = is_correct(user_answer, flashcard)
         print("CORRECT! :)" if correct else "WRONG! :(")
         print("Answer:", flashcard.answer)
-        print("Was you answer correctly assessed? Y/n")
+        print("Was your answer correctly assessed? Y/n")
         while (user_input := input()) not in ["Y", "y", "N", "n", ""]:
             print("Please type Y or n")
         if user_input in ["N", "n"]:
