@@ -44,7 +44,7 @@ def is_correct(user_answer, flashcard):
     wrong_answers = MODEL.encode(flashcard.wrong_answers)
 
     def cos_sim(x, y):
-        return dot(x, y) / norm(x) * norm(y)
+        return dot(x, y) / (norm(x) * norm(y))
 
     sim_orig_ans = cos_sim(user_answer, original_answer)
     sim_correct_anss = [cos_sim(user_answer, a) for a in correct_answers]
