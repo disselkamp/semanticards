@@ -1,5 +1,6 @@
 import argparse
 import random
+from itertools import cycle
 from dataclasses import dataclass, field
 from sentence_transformers import SentenceTransformer
 from numpy import dot
@@ -41,9 +42,7 @@ def add_deck_to_flashcards(deck, flashcards):
 
 def is_correct(user_answer, flashcard):
     user_answer = MODEL.encode(user_answer)
-    correct_answers = MODEL.encode(
-        [flashcard.answer] + flashcard.correct_user_answers
-    )
+    correct_answers = MODEL.encode([flashcard.answer] + flashcard.correct_user_answers)
     wrong_answers = MODEL.encode(flashcard.wrong_user_answers)
 
     def cos_sim(x, y):
@@ -69,27 +68,34 @@ def main(decks, shuffle):
         add_deck_to_flashcards(deck, flashcards)
 
     if shuffle:
+        print("shuffling")
         random.shuffle(flashcards)
 
-    while True:
-        flashcard = random.choice(flashcards)
-        print(flashcard.question)
-        print("Type your answer:")
-        user_answer = input()
+    for flashcard in cycle(flashcards):
+        question = flashcard.question.strip()
+        print("+" + "-" * len(question) + "+")
+        print("|" + question + "|")
+        print("+" + "-" * len(question) + "+")
+        user_answer = input(">")
         correct = is_correct(user_answer, flashcard)
-        print("CORRECT! :)" if correct else "WRONG! :(")
-        print("Answer:", flashcard.answer)
-        print("Was your answer correctly assessed? Y/n")
-        while (user_input := input()) not in ["Y", "y", "N", "n", ""]:
-            print("Please type Y or n")
+        print("+++++ CORRECT! :) +++++" if correct else "----- WRONG! :( -----")
+        answer = flashcard.answer.strip()
+        print("+" + "-" * len(answer) + "+")
+        print("|" + answer + "|")
+        print("+" + "-" * len(answer) + "+")
+        assessment = "Was your answer correctly assessed? Y/n "
+        while (user_input := input(assessment)) not in ["Y", "y", "N", "n", ""]:
+            continue
         if user_input in ["N", "n"]:
             if correct:
                 flashcard.wrong_user_answers.append(user_answer)
             else:
                 flashcard.correct_user_answers.append(user_answer)
+        print("\n~~~~~~~~~~~~~~~ Next Card ~~~~~~~~~~~~~~~\n")
 
 
 if __name__ == "__main__":
+    # python recall.py decks.txt --shuffle
     parser = argparse.ArgumentParser(description="Process some integers.")
     parser.add_argument(
         "decks",
