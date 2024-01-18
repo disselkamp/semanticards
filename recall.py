@@ -6,7 +6,8 @@ from sentence_transformers import SentenceTransformer
 from numpy import dot
 from numpy.linalg import norm
 
-MODEL = SentenceTransformer("all-MiniLM-L6-v2")  # 120 mb
+MODEL = SentenceTransformer("all-MiniLM-L6-v2")  # 80 mb
+# MODEL = SentenceTransformer("all-mpnet-base-v2")  # 420 mb
 MIN_SIMILARITY = 0.9
 
 
@@ -52,9 +53,8 @@ def is_correct(user_answer, flashcard):
     sim_wrong_anss = [cos_sim(user_answer, a) for a in wrong_answers]
 
     sim_nearest_correct = max(sim_correct_anss)
-    sim_nearest_wrong = 0 if len(sim_wrong_anss) == 0 else max(sim_wrong_anss)
 
-    if sim_nearest_wrong > sim_nearest_correct:
+    if len(sim_wrong_anss) > 0 and max(sim_wrong_anss) > sim_nearest_correct:
         return False
     elif sim_nearest_correct > MIN_SIMILARITY:
         return True
