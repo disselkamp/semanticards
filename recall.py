@@ -6,7 +6,7 @@ from sentence_transformers import SentenceTransformer
 from numpy import dot
 from numpy.linalg import norm
 
-MODEL = SentenceTransformer("all-MiniLM-L6-v2")  # 80 mb
+MODEL = SentenceTransformer("all-MiniLM-L6-v2", cache_folder="./cache")  # 80 mb
 # MODEL = SentenceTransformer("all-mpnet-base-v2")  # 420 mb
 MIN_SIMILARITY = 0.9
 
@@ -62,7 +62,18 @@ def is_correct(user_answer, flashcard):
         return False
 
 
-def main(decks, shuffle):
+def print_card(text: str, card_size: int):
+    space = card_size - len(text)
+    before = space // 2 * " "
+    after = (space - space // 2) * " "
+    print("+" + "-" * card_size + "+")
+    print("|" + " " * card_size + "|")
+    print("|" + before + text + after + "|")
+    print("|" + " " * card_size + "|")
+    print("+" + "-" * card_size + "+")
+
+
+def main(decks, shuffle, nosemantic):
     flashcards = []
     for deck in decks:
         add_deck_to_flashcards(deck, flashcards)
@@ -73,17 +84,14 @@ def main(decks, shuffle):
 
     for flashcard in cycle(flashcards):
         question = flashcard.question.strip()
-        print("+" + "-" * len(question) + "+")
-        print("|" + question + "|")
-        print("+" + "-" * len(question) + "+")
-        user_answer = input(">")
-        correct = is_correct(user_answer, flashcard)
-        print("+++++ CORRECT! :) +++++" if correct else "----- WRONG! :( -----")
         answer = flashcard.answer.strip()
-        print("+" + "-" * len(answer) + "+")
-        print("|" + answer + "|")
-        print("+" + "-" * len(answer) + "+")
-        assessment = "Was your answer correctly assessed? Y/n "
+        card_size = max(len(question), len(answer)) + 2
+        print_card(question, card_size)
+        user_answer = input(">")
+        correct = user_answer == answer if nosemantic else is_correct(user_answer, flashcard)
+        print("\n    🥳 CORRECT! :)\n" if correct else "\n    ❌ WRONG! :(\n")
+        print_card(answer, card_size)
+        assessment = "Next Card?" if nosemantic else "Was your answer correctly assessed? Y/n "
         while (user_input := input(assessment)) not in ["Y", "y", "N", "n", ""]:
             continue
         if user_input in ["N", "n"]:
@@ -91,6 +99,11 @@ def main(decks, shuffle):
                 flashcard.wrong_user_answers.append(user_answer)
             else:
                 flashcard.correct_user_answers.append(user_answer)
+        else:
+            if correct:
+                flashcard.correct_user_answers.append(user_answer)
+            else:
+                flashcard.wrong_user_answers.append(user_answer)
         print("\n~~~~~~~~~~~~~~~ Next Card ~~~~~~~~~~~~~~~\n")
 
 
@@ -109,5 +122,10 @@ if __name__ == "__main__":
         action="store_true",
         help="do you want to shuffle the decks?",
     )
+    parser.add_argument(
+        "--nosemantic",
+        action="store_true",
+        help="do you want to use exact answers",
+    )
     args = parser.parse_args()
-    main(args.decks, args.shuffle)
+    main(args.decks, args.shuffle, args.nosemantic)
