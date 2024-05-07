@@ -1,3 +1,4 @@
+import os
 import argparse
 import random
 from itertools import cycle
@@ -6,7 +7,7 @@ from sentence_transformers import SentenceTransformer
 from numpy import dot
 from numpy.linalg import norm
 
-MODEL = SentenceTransformer("all-MiniLM-L6-v2", cache_folder="./cache")  # 80 mb
+MODEL = SentenceTransformer("all-MiniLM-L6-v2", cache_folder="cache")  # 80 mb
 # MODEL = SentenceTransformer("all-mpnet-base-v2")  # 420 mb
 MIN_SIMILARITY = 0.9
 
@@ -62,14 +63,17 @@ def is_correct(user_answer, flashcard):
         return False
 
 
-def print_card(text: str, card_size: int):
+def print_card(text: str, card_size: int, nosemantic: bool):
     space = card_size - len(text)
     before = space // 2 * " "
     after = (space - space // 2) * " "
     print("+" + "-" * card_size + "+")
     print("|" + " " * card_size + "|")
     print("|" + before + text + after + "|")
-    print("|" + " " * card_size + "|")
+    if nosemantic:
+        print("|" + " " * (card_size - 10) + "(classic) " + "|")
+    else:
+        print("|" + " " * (card_size - 11) + "(semantic) " + "|")
     print("+" + "-" * card_size + "+")
 
 
@@ -86,11 +90,13 @@ def main(decks, shuffle, nosemantic):
         question = flashcard.question.strip()
         answer = flashcard.answer.strip()
         card_size = max(len(question), len(answer)) + 2
-        print_card(question, card_size)
+        print_card(question, card_size, nosemantic)
         user_answer = input(">")
-        correct = user_answer == answer if nosemantic else is_correct(user_answer, flashcard)
+        correct = (user_answer == answer
+                   if nosemantic else
+                   is_correct(user_answer, flashcard))
         print("\n    🥳 CORRECT! :)\n" if correct else "\n    ❌ WRONG! :(\n")
-        print_card(answer, card_size)
+        print_card(answer, card_size, nosemantic)
         assessment = "Next Card?" if nosemantic else "Was your answer correctly assessed? Y/n "
         while (user_input := input(assessment)) not in ["Y", "y", "N", "n", ""]:
             continue
@@ -104,7 +110,7 @@ def main(decks, shuffle, nosemantic):
                 flashcard.correct_user_answers.append(user_answer)
             else:
                 flashcard.wrong_user_answers.append(user_answer)
-        print("\n~~~~~~~~~~~~~~~ Next Card ~~~~~~~~~~~~~~~\n")
+        os.system('clear')
 
 
 if __name__ == "__main__":
