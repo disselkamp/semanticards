@@ -2,7 +2,7 @@
 
 # Semanticards v0
 
-Better recall and retrieve learning with Semanticards.
+Better recall and retrieval learning with Semanticards.
 
 Semanticards are flashcards that learn and understand your answers semantically.
 
